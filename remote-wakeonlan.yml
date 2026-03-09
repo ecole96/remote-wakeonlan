@@ -1,14 +1,13 @@
 services:
   remote-wakeonlan:
     container_name: remote-wakeonlan
-    image: ecole96/remote-wakeonlan-1.0.0
-    network_mode: host
-    restart: unless-stopped
-    environment:
-      DEVICES: '{"EvanPC": "bc:fc:e7:1c:1f:ae"}'
+    env_file: .env
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8765/"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 5s
+    image: ecole96/remote-wakeonlan-1.0.0
+    network_mode: host
+    restart: unless-stopped

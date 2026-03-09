@@ -12,7 +12,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 DEVICES = json.loads(os.environ.get("DEVICES", "{}"))
-PORT = 8765
+PORT = os.environ.get(int("PORT"), 8765)
 
 if not DEVICES:
     logger.warning("No devices configured. Set the DEVICES environment variable.")
