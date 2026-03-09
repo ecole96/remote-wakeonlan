@@ -8,6 +8,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s
-    image: ecole96/remote-wakeonlan-1.0.0
+    image: ecole96/projects:remote-wakeonlan-1.0.0
     network_mode: host
     restart: unless-stopped
