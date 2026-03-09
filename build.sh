@@ -16,12 +16,16 @@ do
     esac
 done
 
+docker compose -f remote-wakeonlan.yml down || true
+
 if [ $PUBLISH -eq 1 ]
     then
         echo "Building and publishing image: $IMAGE"
-        docker buildx build --no-cache  --platform linux/amd64,linux/arm64 -t "$IMAGE" .
+        docker buildx build --no-cache --platform linux/amd64,linux/arm64 -t "$IMAGE" .
         docker push "$IMAGE"
     else
         echo "Building local image: $IMAGE"
         docker build -t "$IMAGE" .
 fi  
+
+docker compose -f remote-wakeonlan.yml up -d

@@ -11,12 +11,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# DEVICES format:
+# {
+#   "MyPC": { "targetIpAddress": "192.168.4.50", "macAddress": "AA-BB-CC-DD-EE-FF" }
+# }
 DEVICES = json.loads(os.environ.get("DEVICES", "{}"))
 PORT = int(os.environ.get("PORT", 8765))
 
 if not DEVICES:
     logger.warning("No devices configured. Set the DEVICES environment variable.")
-    logger.warning('Example: DEVICES=\'{"pc": "AA:BB:CC:DD:EE:FF"}\'')
 
 # Endpoints:
 #   GET /                 - API documentation
@@ -49,18 +52,24 @@ class Handler(BaseHTTPRequestHandler):
 
             elif parsed.path == "/wake":
                 device = params.get("device", [None])[0]
-                mac = DEVICES.get(device)
+                config = DEVICES.get(device)
                 if not device:
                     status, data = 400, {"error": "Missing 'device' parameter"}
-                elif not mac:
+                elif not config:
                     status, data = 404, {"error": f"Unknown device: {device}"}
                 else:
-                    subprocess.run(["wakeonlan", mac], check=True)
-                    logger.info(f"WOL      {ip} - Sent magic packet to {device} ({mac})")
+                    target_ip = config["targetIpAddress"]
+                    mac = config["macAddress"]
+                    subprocess.run(["wakeonlan", "-i", target_ip, mac], check=True)
+                    logger.info(f"WOL      {ip} - Sent magic packet to {device} ({mac}) via {target_ip}")
                     status, data = 200, {"ok": True, "device": device}
 
             else:
                 status, data = 404, {"error": "Not found"}
+
+        except KeyError as e:
+            logger.error(f"ERROR    {ip} - Missing device config key: {e}")
+            status, data = 500, {"error": f"Device config missing key: {e}"}
 
         except subprocess.CalledProcessError as e:
             logger.error(f"ERROR    {ip} - wakeonlan failed: {e}")
